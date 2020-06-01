@@ -1,8 +1,7 @@
 #include <iostream>
-#include <array>
 #include <vector>
-#include <ctime> // для time()
-#include <cstdlib> // для rand() и srand()
+#include <ctime>
+#include <cstdlib> 
 
 class Card
 {
@@ -92,7 +91,7 @@ public:
 class Deck
 {
 private:
-	std::array<Card, 52> m_deck;
+	std::vector<Card> m_deck;
 	int m_cardIndex = 0;
 public:
 	Deck()
@@ -102,7 +101,7 @@ public:
 			for (size_t rank = 0; rank < Card::MAX_RANKS; ++rank)
 			{
 				Card c(static_cast<Card::CardRank>(rank), static_cast<Card::CardSuit>(suit));
-				m_deck[card] = c;
+				m_deck.push_back(c);
 				++card;
 			}
 	}
