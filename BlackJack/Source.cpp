@@ -115,12 +115,6 @@ public:
 
 		std::cout << '\n';
 	}
-	int getRandomNumber(int min, int max)
-	{
-		static const double fraction = 1.0 / (static_cast<double>(RAND_MAX) + 1.0); // используем static, так как это значение нужно вычислить только один раз
-		// –авномерно распредел€ем вычисление значени€ из нашего диапазона
-		return static_cast<int>(rand() * fraction * (max - min + 1) + min);
-	}
 	void swapCard(Card &a, Card &b)
 	{
 		Card temp = a;
@@ -130,10 +124,10 @@ public:
 	void shuffleDeck()
 	{
 		// ѕеребираем каждую карту в колоде
-		for (int index = 0; index < 52; ++index)
+		for (int index = 51; index != 0 ; --index)
 		{
 			// ¬ыбираем любую случайную карту
-			int swapIndex = getRandomNumber(0, 51);
+			int swapIndex = rand() % index;
 			// ћен€ем местами с нашей текущей картой
 			swapCard(m_deck[index], m_deck[swapIndex]);
 		}
@@ -167,6 +161,21 @@ public:
 			card.printCard();
 		std::cout << std::endl;
 	}
+	int getTotal() const
+	{
+		int total = 0;
+		short flag = 0;
+		for (Card i : m_heand)
+		{
+			if (i.getCardValue() == 11 && flag == 1)
+				++total;
+			else
+				total += i.getCardValue();
+			if (i.getCardValue() == 11)
+				flag = 1;
+		}
+		return total;
+	}
 	void push_backCard(Card card) { m_heand.push_back(card); }
 	void clearPlayerHeand() { m_heand.clear(); }
 };
@@ -184,7 +193,7 @@ char getPlayerChoice()
 	return choice;
 }
 
-bool playBlackjack(Deck& deck, Player& player)
+short playBlackjack(Deck& deck, Player& player)
 {
 	std::vector<Card> heand;
 	int playerTotal = 0;
@@ -197,13 +206,10 @@ bool playBlackjack(Deck& deck, Player& player)
 
 	// »грок получает две карты
 	player.push_backCard(deck.Deck::dealCard());
-	//heand.push_back(deck.Deck::dealCard());
-	playerTotal += player.getPlayerHeand()[cardCount].Card::getCardValue();
 	++cardCount;
 	player.push_backCard(deck.Deck::dealCard());
-	playerTotal += player.getPlayerHeand()[cardCount].Card::getCardValue();
 	++cardCount;
-	//player.setPlayerHeand(heand);
+	playerTotal = player.getTotal();
 	player.printPlayerHeand();
 	std::cout << "You have: " << playerTotal << '\n';
 
@@ -216,7 +222,7 @@ bool playBlackjack(Deck& deck, Player& player)
 			break;
 
 		player.push_backCard(deck.Deck::dealCard());
-		playerTotal += player.getPlayerHeand()[cardCount].Card::getCardValue();
+		playerTotal = player.getTotal();
 		++cardCount;
 
 		player.printPlayerHeand();
@@ -224,7 +230,7 @@ bool playBlackjack(Deck& deck, Player& player)
 
 		// —мотрим, не проиграл ли игрок
 		if (playerTotal > 21)
-			return false;
+			return -1;
 	}
 
 	// ≈сли игрок не проиграл (у него не больше 21), тогда дилер получает карты до тех пор, пока у него в сумме будет не меньше 17
@@ -236,9 +242,14 @@ bool playBlackjack(Deck& deck, Player& player)
 
 	// ≈сли у дилера больше 21 - он проиграл. »грок выиграл
 	if (dealerTotal > 21)
-		return true;
-
-	return (playerTotal > dealerTotal);
+		return 1;
+	
+	// 1 - игрок выйграл, -1 - игрок проиграл, 0 - ничь€
+	if (playerTotal > dealerTotal)
+		return 1;
+	else if (playerTotal < dealerTotal)
+		return -1;
+	else return 0;
 }
 
 int main()
@@ -249,6 +260,7 @@ int main()
 	Deck deck;
 	char choice;
 	double bet = 0;
+	short result = 0;
 	while (1)
 	{
 		std::cout << "Your money: " << player.getPlayerMoney() << std::endl;
@@ -259,18 +271,25 @@ int main()
 			std::cout << "Enter your bet: ";
 			std::cin >> bet;
 			deck.shuffleDeck();
-			if (playBlackjack(deck, player))
+			result = playBlackjack(deck, player);
+			if (result == 1)
 			{
 				std::cout << "You win!\n\n";
 				player.setPlayerMoney(player.getPlayerMoney() + bet);
 				player.clearPlayerHeand();
 			}
-			else
-			{
-				std::cout << "You lose!\n\n";
-				player.setPlayerMoney(player.getPlayerMoney() - bet);
-				player.clearPlayerHeand();
-			}
+			else 
+				if (result == -1)
+				{
+					std::cout << "You lose!\n\n";
+					player.setPlayerMoney(player.getPlayerMoney() - bet);
+					player.clearPlayerHeand();
+				}
+					else
+					{
+						std::cout << "Draw";
+						player.clearPlayerHeand();
+					}
 		}
 		else
 			break;
