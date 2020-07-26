@@ -40,6 +40,7 @@ public:
 	}
 	void printCard() const
 	{
+		// Выводим карту в консоль
 		switch (m_rank)
 		{
 		case RANK_2:		std::cout << '2'; break;
@@ -91,11 +92,12 @@ public:
 class Deck
 {
 private:
-	std::vector<Card> m_deck;
-	int m_cardIndex = 0;
+	std::vector<Card> m_deck; // колода карт
+	int m_cardIndex = 0; // Номер текущей карты сверху
 public:
 	Deck()
 	{
+		// Заполняем колоду картами
 		int card = 0;
 		for (size_t suit = 0; suit < Card::MAX_SUITS; ++suit)
 			for (size_t rank = 0; rank < Card::MAX_RANKS; ++rank)
@@ -107,6 +109,7 @@ public:
 	}
 	void printDeck() const
 	{
+		// Выводим колоду в консоль
 		for (const auto &card : m_deck)
 		{
 			card.Card::printCard();
@@ -117,6 +120,7 @@ public:
 	}
 	void swapCard(Card &a, Card &b)
 	{
+		// Меняем две карты местами
 		Card temp = a;
 		a = b;
 		b = temp;
@@ -135,6 +139,7 @@ public:
 	}
 	Card& dealCard()
 	{
+		// Выдаем одну карту
 		++m_cardIndex;
 		return m_deck[m_cardIndex-1];
 	}
@@ -143,19 +148,21 @@ public:
 class Player
 {
 private:
-	std::vector<Card> m_heand;
-	double m_money;
+	std::vector<Card> m_heand; // Карты игрока
+	double m_money; // Деньги игрока
 public:
 	Player()
 	{
 		m_money = 100;
 	}
+
 	double getPlayerMoney() const { return m_money; }
 	void setPlayerMoney(double money) { m_money = money; }
 	void setPlayerHeand(std::vector<Card> heand) { m_heand = heand; }
 	std::vector<Card> getPlayerHeand() { return m_heand; }
 	void printPlayerHeand() const 
 	{
+		// Выводим карты игрока в консоль
 		std::cout << "Your heand: ";
 		for (Card card : m_heand)
 			card.printCard();
@@ -163,8 +170,9 @@ public:
 	}
 	int getTotal() const
 	{
+		// Считаем сумму очков игрока
 		int total = 0;
-		short flag = 0;
+		short flag = 0;	// Проверет начличие двух тузов в руке игрока
 		for (Card i : m_heand)
 		{
 			if (i.getCardValue() == 11 && flag == 1)
@@ -183,14 +191,29 @@ public:
 
 char getPlayerChoice()
 {
-	std::cout << "(h) to hit, or (s) to stand: ";
 	char choice;
+	std::cout << "(h) to hit, or (s) to stand: ";
 	do
 	{
 		std::cin >> choice;
 	} while (choice != 'h' && choice != 's');
 
 	return choice;
+}
+
+double getPlayerBet(Player &player)
+{
+	double bet;
+	std::cout << "Enter your bet: ";
+	std::cin >> bet;
+	while ((bet > 0) == false || bet > player.getPlayerMoney())
+	{
+		std::cin.clear();
+		std::cin.ignore(std::cin.rdbuf()->in_avail());
+		std::cout << "Enter correct sum: ";
+		std::cin >> bet;
+	}
+	return bet;
 }
 
 short playBlackjack(Deck& deck, Player& player)
@@ -268,8 +291,13 @@ int main()
 		std::cin >> choice;
 		if (choice == 'y')
 		{
-			std::cout << "Enter your bet: ";
-			std::cin >> bet;
+			if(player.getPlayerMoney() > 0)
+				bet = getPlayerBet(player);
+			else
+			{
+				std::cout << "You have not money.\n";
+				exit(0);
+			}
 			deck.shuffleDeck();
 			result = playBlackjack(deck, player);
 			if (result == 1)
